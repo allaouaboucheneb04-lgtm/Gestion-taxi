@@ -20,6 +20,8 @@ let selectedPayment = "Cash";
 let selectedTripType = "normal";
 let working = false;
 let workStart = null;
+let dashboardCompanyFilter = "";
+let statsCompanyFilter = "";
 
 const $ = (id) => document.getElementById(id);
 const normalize = (s) => String(s || "").trim().toLowerCase();
@@ -54,6 +56,7 @@ function inRange(iso, start, end){
 function isFeeAppliedThisWeek(companyName, start, end){
   return trips.some(t => t.company === companyName && t.weeklyCompanyFeeApplied === true && inRange(t.date, start, end));
 }
+function filteredTripsByCompany(name){ return name ? trips.filter(t => t.company === name) : trips; }
 
 window.switchAuthMode = function(mode){
   authMode = mode;
@@ -94,7 +97,7 @@ window.openPage = function(id){
   const nav = $("nav-" + id); if(nav) nav.classList.add("active");
   if(id === "history") renderTrips();
   if(id === "expenses") renderExpenses();
-  if(id === "stats") drawWeeklyChart();
+  if(id === "stats") refreshStatsByCompany();
   if(id === "settings") renderSettingsSummary();
 };
 
@@ -114,7 +117,7 @@ function buildSuggestions(){
 }
 window.addSuggestedCompany = function(name){
   if(!(profile.companies || []).some(c => normalize(c.name) === normalize(name))){
-    profile.companies.push(defaultCompany(name)); renderCompanies(); renderCompanySelect();
+    profile.companies.push(defaultCompany(name)); renderCompanies(); renderCompanySelect(); renderCompanyFilters();
   }
 };
 window.addCompanyRow = function(){ profile.companies.push(defaultCompany("")); renderCompanies(); };
@@ -207,11 +210,11 @@ function renderOnboarding(){
   renderCompanies(); renderPaymentMethods(); renderVehicles(); renderOffDays();
 }
 
-window.updateCompanyName = (i, value) => { profile.companies[i].name = value; renderCompanies(); renderCompanySelect(); };
+window.updateCompanyName = (i, value) => { profile.companies[i].name = value; renderCompanies(); renderCompanySelect(); renderCompanyFilters(); };
 window.updateCompanyFee = (i, value) => { profile.companies[i].fee = Number(value || 0); };
-window.updateCompanyWeekStart = (i, value) => { profile.companies[i].weekStartDay = value; };
+window.updateCompanyWeekStart = (i, value) => { profile.companies[i].weekStartDay = value; renderCompanyFilters(); };
 window.updateCompanyAirport = (i, value) => { profile.companies[i].airport = value === "oui"; };
-window.removeCompany = (i) => { profile.companies.splice(i, 1); renderCompanies(); renderCompanySelect(); };
+window.removeCompany = (i) => { profile.companies.splice(i, 1); renderCompanies(); renderCompanySelect(); renderCompanyFilters(); };
 window.updatePaymentName = (i, value) => { profile.paymentMethods[i].name = value; renderPaymentMethods(); renderPaymentButtons(); };
 window.updatePaymentPercentage = (i, value) => { profile.paymentMethods[i].percentage = Number(value || 0); };
 window.removePaymentMethod = (i) => { profile.paymentMethods.splice(i, 1); renderPaymentMethods(); renderPaymentButtons(); };
@@ -245,7 +248,7 @@ window.saveOnboarding = async function(){
   cleanProfileBeforeSave();
   if(!profile.driverName) return alert("Entre le nom du chauffeur.");
   await setDoc(doc(db, "drivers", currentUser.uid), profile, { merge:true });
-  renderPaymentButtons(); renderCompanySelect(); renderSettingsSummary(); refreshDashboardHeader(); refreshAll();
+  renderPaymentButtons(); renderCompanySelect(); renderCompanyFilters(); renderSettingsSummary(); refreshDashboardHeader(); refreshAll();
   $("onboardingPage").classList.add("hidden"); $("appPage").classList.remove("hidden");
 };
 window.openOnboardingForEdit = function(){ renderOnboarding(); $("appPage").classList.add("hidden"); $("onboardingPage").classList.remove("hidden"); };
@@ -283,6 +286,28 @@ function renderCompanySelect(){
   }
   select.onchange = refreshTripAirportArea;
   refreshTripAirportArea();
+}
+function renderCompanyFilters(){
+  const companies = profile.companies || [];
+  const ids = ["dashboardCompanyFilter","statsCompanyFilter"];
+  ids.forEach(id => {
+    const select = $(id);
+    if(!select) return;
+    select.innerHTML = "";
+    companies.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.name; opt.textContent = c.name;
+      select.appendChild(opt);
+    });
+  });
+  if(companies.length){
+    if(!companies.find(c => c.name === dashboardCompanyFilter)) dashboardCompanyFilter = companies[0].name;
+    if(!companies.find(c => c.name === statsCompanyFilter)) statsCompanyFilter = companies[0].name;
+    $("dashboardCompanyFilter").value = dashboardCompanyFilter;
+    $("statsCompanyFilter").value = statsCompanyFilter;
+  }
+  $("dashboardCompanyFilter").onchange = (e) => { dashboardCompanyFilter = e.target.value; renderCompanyWeekSummary(); refreshDashboardWeekOnly(); };
+  $("statsCompanyFilter").onchange = (e) => { statsCompanyFilter = e.target.value; refreshStatsByCompany(); };
 }
 function selectedCompanyObj(){ return (profile.companies || []).find(c => c.name === $("tripCompany").value) || null; }
 function refreshTripAirportArea(){
@@ -396,7 +421,6 @@ async function loadExpenses(uid){
 function renderTrips(){
   const list = $("tripList"); list.innerHTML = "";
   trips.forEach(t => {
-    const totalFees = Number(t.paymentFee || 0) + Number(t.weeklyCompanyFee || 0) + Number(t.airportFee || 0);
     const details = [t.payment || "", `${t.km || 0} km`, t.company || ""].filter(Boolean).join(" • ");
     const extras = [];
     if(t.weeklyCompanyFeeApplied) extras.push(`frais semaine ${formatMoney(t.weeklyCompanyFee)}`);
@@ -422,16 +446,16 @@ function renderExpenses(){
 }
 
 function renderCompanyWeekSummary(){
-  const company = selectedCompanyObj() || (profile.companies || [])[0];
+  const companyName = dashboardCompanyFilter || (profile.companies || [])[0]?.name || "";
   const el = $("companyWeekSummary");
-  if(!company){
+  if(!companyName){
     $("currentWeekRange").textContent = "-";
     el.innerHTML = '<div class="summary-box">Ajoute une compagnie pour suivre la semaine.</div>';
     return;
   }
-  const { start, end, label } = getWeekRangeForCompany(company.name);
+  const { start, end, label, company } = getWeekRangeForCompany(companyName);
   $("currentWeekRange").textContent = label;
-  const weekTrips = trips.filter(t => t.company === company.name && inRange(t.date, start, end));
+  const weekTrips = trips.filter(t => t.company === companyName && inRange(t.date, start, end));
   const gross = weekTrips.reduce((a,b)=>a+Number(b.amount||0),0);
   const paymentFees = weekTrips.reduce((a,b)=>a+Number(b.paymentFee||0),0);
   const airportFees = weekTrips.reduce((a,b)=>a+Number(b.airportFee||0),0);
@@ -445,6 +469,45 @@ function renderCompanyWeekSummary(){
     <div class="summary-box"><strong>Frais compagnie appliqués :</strong> ${formatMoney(companyWeeklyFee)}</div>
     <div class="summary-box"><strong>Net semaine avant dépenses :</strong> ${formatMoney(netBeforeExpenses)}</div>
   `;
+}
+function refreshDashboardWeekOnly(){
+  const companyName = dashboardCompanyFilter || (profile.companies || [])[0]?.name || "";
+  if(!companyName){ $("weekTotal").textContent = formatMoney(0); return; }
+  const { start, end } = getWeekRangeForCompany(companyName);
+  const weekTrips = trips.filter(t => t.company === companyName && inRange(t.date, start, end));
+  const weekTotal = weekTrips.reduce((a,b)=>a+Number(b.amount||0),0);
+  $("weekTotal").textContent = formatMoney(weekTotal);
+  renderCompanyWeekSummary();
+}
+
+function refreshStatsByCompany(){
+  const companyName = statsCompanyFilter || (profile.companies || [])[0]?.name || "";
+  const companyTrips = filteredTripsByCompany(companyName);
+  const month = monthStr();
+
+  const { start, end } = companyName ? getWeekRangeForCompany(companyName) : { start:new Date(), end:new Date() };
+  const weekTrips = companyTrips.filter(t => inRange(t.date, start, end));
+  const monthTrips = companyTrips.filter(t => String(t.date).slice(0,7) === month);
+
+  const weekTotal = weekTrips.reduce((a,b)=>a+Number(b.amount||0),0);
+  const monthTotal = monthTrips.reduce((a,b)=>a+Number(b.amount||0),0);
+  const monthKm = monthTrips.reduce((a,b)=>a+Number(b.km||0),0);
+  const avgTrip = companyTrips.length ? monthTotal / monthTrips.length || 0 : 0;
+  const paymentFees = companyTrips.reduce((a,b)=>a+Number(b.paymentFee||0),0);
+  const airportFees = companyTrips.reduce((a,b)=>a+Number(b.airportFee||0),0);
+  const companyFees = companyTrips.reduce((a,b)=>a+Number(b.weeklyCompanyFee||0),0);
+  const net = monthTotal - paymentFees - airportFees - companyFees;
+
+  $("weekTotal").textContent = formatMoney(weekTotal);
+  $("monthTotal").textContent = formatMoney(monthTotal);
+  $("avgTrip").textContent = formatMoney(avgTrip);
+  $("monthKm").textContent = Math.round(monthKm * 10) / 10;
+  $("statsPaymentFees").textContent = formatMoney(paymentFees);
+  $("statsAirportFees").textContent = formatMoney(airportFees);
+  $("statsCompanyFees").textContent = formatMoney(companyFees);
+  $("statsNet").textContent = formatMoney(net);
+
+  drawWeeklyChart(companyName);
 }
 
 function refreshAll(){
@@ -470,27 +533,11 @@ function refreshAll(){
   $("expenseTotal").textContent = formatMoney(expense);
   $("profitTotal").textContent = formatMoney(profit);
 
-  const selectedCompany = selectedCompanyObj() || (profile.companies || [])[0];
-  let weekTrips = [];
-  if(selectedCompany){
-    const range = getWeekRangeForCompany(selectedCompany.name);
-    weekTrips = trips.filter(t => t.company === selectedCompany.name && inRange(t.date, range.start, range.end));
-  }
-  const weekTotal = weekTrips.reduce((a,b)=>a+Number(b.amount||0),0);
-  const monthTrips = trips.filter(t => String(t.date).slice(0,7) === month);
-  const monthTotal = monthTrips.reduce((a,b)=>a+Number(b.amount||0),0);
-  const monthKm = monthTrips.reduce((a,b)=>a+Number(b.km||0),0);
-  const avgTrip = tripCount ? income / tripCount : 0;
-
-  $("weekTotal").textContent = formatMoney(weekTotal);
-  $("monthTotal").textContent = formatMoney(monthTotal);
-  $("avgTrip").textContent = formatMoney(avgTrip);
-  $("monthKm").textContent = Math.round(monthKm * 10) / 10;
-
-  renderTrips(); renderExpenses(); renderCompanyWeekSummary(); drawWeeklyChart();
+  refreshDashboardWeekOnly();
+  renderTrips(); renderExpenses(); refreshStatsByCompany();
 }
 
-function drawWeeklyChart(){
+function drawWeeklyChart(companyName=""){
   const canvas = $("weeklyChart"); if(!canvas) return;
   const ctx = canvas.getContext("2d");
   const cw = canvas.clientWidth, ch = 170;
@@ -499,7 +546,8 @@ function drawWeeklyChart(){
 
   const dates = [];
   for(let i=6;i>=0;i--){ const d = new Date(); d.setDate(d.getDate()-i); dates.push(d.toISOString().slice(0,10)); }
-  const values = dates.map(d => trips.filter(t => String(t.date).slice(0,10) === d).reduce((a,b)=>a+Number(b.amount||0),0));
+  const sourceTrips = companyName ? trips.filter(t => t.company === companyName) : trips;
+  const values = dates.map(d => sourceTrips.filter(t => String(t.date).slice(0,10) === d).reduce((a,b)=>a+Number(b.amount||0),0));
   const max = Math.max(...values, 1), padding = 16, step = (cw - padding*2) / values.length, barW = step * 0.58;
 
   values.forEach((v,i) => {
@@ -538,7 +586,7 @@ window.exportData = function(){
   URL.revokeObjectURL(a.href);
 };
 
-window.addEventListener("resize", () => { if($("stats").classList.contains("active")) drawWeeklyChart(); });
+window.addEventListener("resize", () => { if($("stats").classList.contains("active")) refreshStatsByCompany(); });
 
 async function loadProfile(uid){
   const snap = await getDoc(doc(db, "drivers", uid));
@@ -569,7 +617,7 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if(user){
     await Promise.all([loadProfile(user.uid), loadTrips(user.uid), loadExpenses(user.uid)]);
-    buildSuggestions(); renderOnboarding(); renderPaymentButtons(); renderCompanySelect(); renderSettingsSummary(); refreshDashboardHeader(); refreshAll();
+    buildSuggestions(); renderOnboarding(); renderPaymentButtons(); renderCompanySelect(); renderCompanyFilters(); renderSettingsSummary(); refreshDashboardHeader(); refreshAll();
     $("loginPage").classList.add("hidden");
     if(profile.profileCompleted){ $("appPage").classList.remove("hidden"); $("onboardingPage").classList.add("hidden"); }
     else { $("onboardingPage").classList.remove("hidden"); $("appPage").classList.add("hidden"); }

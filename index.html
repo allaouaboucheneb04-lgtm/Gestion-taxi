@@ -27,23 +27,18 @@
       <div id="registerFields">
         <label>Nom du chauffeur</label>
         <input id="loginName" type="text" placeholder="Jean Dupuis" />
-
         <label>Email</label>
         <input id="loginEmail" type="email" placeholder="chauffeur@email.com" />
-
         <label>Mot de passe</label>
         <input id="loginPassword" type="password" placeholder="••••••••" />
-
         <button class="btn yellow block" onclick="handleAuth()">Créer le compte</button>
       </div>
 
       <div id="loginFields" class="hidden">
         <label>Email</label>
         <input id="signinEmail" type="email" placeholder="chauffeur@email.com" />
-
         <label>Mot de passe</label>
         <input id="signinPassword" type="password" placeholder="••••••••" />
-
         <button class="btn yellow block" onclick="handleAuth()">Connexion</button>
       </div>
 
@@ -62,10 +57,8 @@
         <h2>Profil chauffeur</h2>
         <label>Nom du chauffeur</label>
         <input id="profileDriverName" type="text" placeholder="Jean Dupuis" />
-
         <label>Objectif par jour ($)</label>
         <input id="profileDailyGoal" type="number" placeholder="300" />
-
         <label>Coût estimé par km ($)</label>
         <input id="profileCostPerKm" type="number" placeholder="0.25" />
       </div>
@@ -75,7 +68,7 @@
           <h2>Compagnies</h2>
           <button class="small-btn" onclick="addCompanyRow()">+ Ajouter</button>
         </div>
-        <p class="muted">Chaque compagnie a ses propres frais et son propre début de semaine.</p>
+        <p class="muted">Chaque compagnie a ses frais et son début de semaine.</p>
         <div class="chips-wrap" id="companySuggestions"></div>
         <div id="companiesContainer"></div>
       </div>
@@ -115,7 +108,6 @@
         </div>
         <button class="close-btn" onclick="toggleSidebar()">×</button>
       </div>
-
       <button class="menu-item" onclick="openPage('dashboard'); toggleSidebar();">🏠 Accueil</button>
       <button class="menu-item" onclick="openPage('addTrip'); toggleSidebar();">➕ Ajouter course</button>
       <button class="menu-item" onclick="openPage('history'); toggleSidebar();">🕘 Historique</button>
@@ -174,6 +166,8 @@
             <h2>Semaine compagnie</h2>
             <div class="small-pill" id="currentWeekRange">-</div>
           </div>
+          <label>Choisir compagnie</label>
+          <select id="dashboardCompanyFilter"></select>
           <div id="companyWeekSummary"></div>
         </div>
       </section>
@@ -188,13 +182,10 @@
         <div class="panel">
           <label>Montant</label>
           <input id="amount" type="number" placeholder="0.00" />
-
           <label>Paiement</label>
           <div id="paymentButtons" class="segmented"></div>
-
           <label>Compagnie</label>
           <select id="tripCompany"></select>
-
           <div id="tripAirportArea" class="hidden">
             <label>Type de course</label>
             <div class="segmented">
@@ -203,23 +194,16 @@
             </div>
             <p class="muted">Pour Diamand ou Teo avec aéroport, une course aéroport ajoute 5.75$ de frais.</p>
           </div>
-
           <label>Kilomètres</label>
           <input id="tripKm" type="number" placeholder="0" />
-
           <label>Note (optionnel)</label>
           <textarea id="tripNote" placeholder="Ajouter une note..."></textarea>
-
           <button class="btn yellow block" onclick="saveTrip()">Enregistrer</button>
         </div>
       </section>
 
       <section id="history" class="page">
-        <div class="page-title-row">
-          <div></div>
-          <h2>Historique</h2>
-          <div></div>
-        </div>
+        <div class="page-title-row"><div></div><h2>Historique</h2><div></div></div>
         <div id="tripList" class="list"></div>
       </section>
 
@@ -233,19 +217,29 @@
       </section>
 
       <section id="stats" class="page">
-        <div class="page-title-row">
-          <div></div>
-          <h2>Statistiques</h2>
-          <div></div>
+        <div class="page-title-row"><div></div><h2>Statistiques par compagnie</h2><div></div></div>
+
+        <div class="panel">
+          <label>Choisir compagnie</label>
+          <select id="statsCompanyFilter"></select>
         </div>
+
         <div class="mini-grid">
-          <div class="mini-box"><span>Semaine</span><strong id="weekTotal">0 $</strong></div>
-          <div class="mini-box"><span>Mois</span><strong id="monthTotal">0 $</strong></div>
-          <div class="mini-box"><span>Moyenne</span><strong id="avgTrip">0 $</strong></div>
+          <div class="mini-box"><span>Revenu semaine</span><strong id="weekTotal">0 $</strong></div>
+          <div class="mini-box"><span>Revenu mois</span><strong id="monthTotal">0 $</strong></div>
+          <div class="mini-box"><span>Moyenne/course</span><strong id="avgTrip">0 $</strong></div>
           <div class="mini-box"><span>Km mois</span><strong id="monthKm">0</strong></div>
         </div>
+
+        <div class="mini-grid">
+          <div class="mini-box"><span>Frais paiement</span><strong id="statsPaymentFees">0 $</strong></div>
+          <div class="mini-box"><span>Frais aéroport</span><strong id="statsAirportFees">0 $</strong></div>
+          <div class="mini-box"><span>Frais compagnie</span><strong id="statsCompanyFees">0 $</strong></div>
+          <div class="mini-box"><span>Net compagnie</span><strong id="statsNet">0 $</strong></div>
+        </div>
+
         <div class="panel">
-          <div class="chart-title">Revenus des 7 derniers jours</div>
+          <div class="chart-title">Revenus 7 derniers jours</div>
           <canvas id="weeklyChart" height="170"></canvas>
         </div>
       </section>
@@ -256,7 +250,6 @@
           <h2>Paramètres</h2>
           <div></div>
         </div>
-
         <div class="panel">
           <div class="row-between">
             <h2>Configuration</h2>
@@ -265,7 +258,6 @@
           <p class="muted">Modifie compagnies, méthodes de paiement, véhicules, jours de repos et objectif.</p>
           <div id="settingsSummary"></div>
         </div>
-
         <div class="panel">
           <button class="btn dark block" onclick="exportData()">Exporter les données</button>
           <button class="btn dark block" onclick="logoutUser()">Déconnexion</button>

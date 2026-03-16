@@ -1,7 +1,7 @@
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open("taxi-driver-pro-v3").then(cache => cache.addAll([
+    caches.open("taxi-driver-pro-v4").then(cache => cache.addAll([
       "./","index.html","style.css","app.js","firebase.js","manifest.json","icon-192.png","icon-512.png"
     ]))
   );
