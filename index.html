@@ -17,12 +17,29 @@
     <div class="login-card">
       <div class="taxi-badge">🚕</div>
       <h1>Taxi Driver Pro</h1>
-      <p>Application chauffeur simple et premium</p>
-      <label>Nom du chauffeur</label>
-      <input id="loginName" type="text" placeholder="Jean Dupuis" />
-      <label>Nom du véhicule</label>
-      <input id="loginCar" type="text" placeholder="Toyota Sienna 2025" />
-      <button class="btn yellow" onclick="login()">Entrer dans l'application</button>
+      <p>Connexion et création de compte chauffeur avec Firebase</p>
+
+      <div class="auth-tabs">
+        <button id="tabLogin" class="auth-tab active" onclick="switchAuthMode('login')">Connexion</button>
+        <button id="tabRegister" class="auth-tab" onclick="switchAuthMode('register')">Créer compte</button>
+      </div>
+
+      <div id="registerFields">
+        <label>Nom du chauffeur</label>
+        <input id="loginName" type="text" placeholder="Jean Dupuis" />
+
+        <label>Nom du véhicule</label>
+        <input id="loginCar" type="text" placeholder="Toyota Sienna 2025" />
+      </div>
+
+      <label>Email</label>
+      <input id="loginEmail" type="email" placeholder="chauffeur@email.com" />
+
+      <label>Mot de passe</label>
+      <input id="loginPassword" type="password" placeholder="••••••••" />
+
+      <button id="authButton" class="btn yellow block" onclick="handleAuth()">Connexion</button>
+      <p id="authMessage" class="auth-message"></p>
     </div>
   </section>
 
@@ -43,6 +60,7 @@
       <button class="menu-item" onclick="openPage('expenses'); toggleSidebar();">⛽ Dépenses</button>
       <button class="menu-item" onclick="openPage('stats'); toggleSidebar();">📈 Statistiques</button>
       <button class="menu-item" onclick="openPage('settings'); toggleSidebar();">⚙️ Réglages</button>
+      <button class="menu-item logout-item" onclick="logoutUser(); toggleSidebar();">🚪 Déconnexion</button>
     </aside>
 
     <div id="overlay" class="overlay hidden" onclick="toggleSidebar()"></div>
@@ -58,10 +76,10 @@
         <div class="vehicle-card">
           <div class="vehicle-info">
             <div class="muted">Véhicule</div>
-            <h2 id="vehicleName">Toyota Sienna 2025</h2>
+            <h2 id="vehicleName">Votre véhicule</h2>
             <div class="chip-row">
               <span class="chip">En ligne</span>
-              <span class="chip dark" id="driverNameDisplay">Jean Dupuis</span>
+              <span class="chip dark" id="driverNameDisplay">Chauffeur</span>
             </div>
           </div>
           <div class="car-emoji">🚕</div>
@@ -190,6 +208,7 @@
           </label>
 
           <button class="btn dark block" onclick="exportData()">Exporter les données</button>
+          <button class="btn dark block" onclick="logoutUser()">Déconnexion</button>
         </div>
       </section>
     </main>
@@ -226,6 +245,6 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

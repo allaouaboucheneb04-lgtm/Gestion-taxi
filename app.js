@@ -1,147 +1,234 @@
+import {
+  auth,
+  db,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy
+} from "./firebase.js";
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
 }
 
-const store = {
-  get(key, fallback) {
-    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
-    catch(e){ return fallback; }
-  },
-  set(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-};
-
-let settings = store.get("settings", {
+let authMode = "login";
+let currentUser = null;
+let settings = {
   driverName: "",
   carName: "",
   enableExpenses: true,
   costPerKm: 0.25
-});
-let trips = store.get("trips", []);
-let expenses = store.get("expenses", []);
+};
+let trips = [];
+let expenses = [];
 let payment = "Cash";
 let working = false;
 let workStart = null;
 
+const $ = (id) => document.getElementById(id);
+
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function monthStr(){ return new Date().toISOString().slice(0,7); }
-
-function formatMoney(n){
-  return `${Math.round((Number(n)||0)*100)/100} $`;
-}
+function formatMoney(n){ return `${Math.round((Number(n)||0) * 100) / 100} $`; }
 function formatDateTime(iso){
   const d = new Date(iso);
-  return d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  return d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+}
+function showAuthMessage(msg, isError = false){
+  const el = $("authMessage");
+  el.textContent = msg || "";
+  el.style.color = isError ? "#ff8f8f" : "#b8b8b8";
 }
 
-function init(){
-  if(settings.driverName || settings.carName){
-    document.getElementById("loginPage").classList.add("hidden");
-    document.getElementById("appPage").classList.remove("hidden");
+window.switchAuthMode = function(mode){
+  authMode = mode;
+  $("tabLogin").classList.toggle("active", mode === "login");
+  $("tabRegister").classList.toggle("active", mode === "register");
+  $("registerFields").style.display = mode === "register" ? "block" : "none";
+  $("authButton").textContent = mode === "register" ? "Créer le compte" : "Connexion";
+  showAuthMessage("");
+};
+
+window.handleAuth = async function(){
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPassword").value;
+  const driverName = $("loginName").value.trim();
+  const carName = $("loginCar").value.trim();
+
+  if(!email || !password){
+    showAuthMessage("Entre l'email et le mot de passe.", true);
+    return;
   }
-  loadSettingsUI();
-  refreshAll();
-}
 
-function login(){
-  const name = document.getElementById("loginName").value.trim();
-  const car = document.getElementById("loginCar").value.trim();
-  if(!name || !car) return alert("Entrer le nom du chauffeur et du véhicule");
-  settings.driverName = name;
-  settings.carName = car;
-  store.set("settings", settings);
-  document.getElementById("loginPage").classList.add("hidden");
-  document.getElementById("appPage").classList.remove("hidden");
-  loadSettingsUI();
-  refreshAll();
-}
+  try {
+    if(authMode === "register"){
+      if(!driverName || !carName){
+        showAuthMessage("Entre le nom du chauffeur et du véhicule.", true);
+        return;
+      }
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "drivers", cred.user.uid), {
+        driverName,
+        carName,
+        enableExpenses: true,
+        costPerKm: 0.25,
+        email,
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+      showAuthMessage("Compte chauffeur créé.");
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+      showAuthMessage("");
+    }
+  } catch (e) {
+    showAuthMessage(e.message, true);
+  }
+};
 
-function toggleSidebar(){
-  document.getElementById("sidebar").classList.toggle("open");
-  document.getElementById("overlay").classList.toggle("hidden");
-}
+window.logoutUser = async function(){
+  await signOut(auth);
+};
 
-function openPage(id){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
-  const nav = document.getElementById("nav-" + id);
+window.toggleSidebar = function(){
+  $("sidebar").classList.toggle("open");
+  $("overlay").classList.toggle("hidden");
+};
+
+window.openPage = function(id){
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  $(id).classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  const nav = $("nav-" + id);
   if(nav) nav.classList.add("active");
   if(id === "history") renderTrips();
   if(id === "expenses") renderExpenses();
   if(id === "stats") drawWeeklyChart();
-}
+};
 
-function setPayment(type){
+window.setPayment = function(type){
   payment = type;
-  document.getElementById("payCash").classList.toggle("active", type === "Cash");
-  document.getElementById("payCard").classList.toggle("active", type === "Carte");
-}
+  $("payCash").classList.toggle("active", type === "Cash");
+  $("payCard").classList.toggle("active", type === "Carte");
+};
 
-function toggleWork(){
+window.toggleWork = function(){
   working = !working;
-  const btn = document.getElementById("workBtn");
+  const btn = $("workBtn");
   if(working){
     workStart = new Date();
     btn.textContent = "⏹ Fin travail";
-  }else{
+  } else {
     const hours = workStart ? ((new Date() - workStart)/3600000) : 0;
-    document.getElementById("todayTime").textContent = `${hours.toFixed(1)}h`;
+    $("todayTime").textContent = `${hours.toFixed(1)}h`;
     btn.textContent = "▶ Commencer travail";
+  }
+};
+
+async function loadDriverData(uid){
+  const snap = await getDoc(doc(db, "drivers", uid));
+  if(snap.exists()){
+    settings = {
+      driverName: snap.data().driverName || "",
+      carName: snap.data().carName || "",
+      enableExpenses: snap.data().enableExpenses !== false,
+      costPerKm: Number(snap.data().costPerKm ?? 0.25)
+    };
   }
 }
 
-function saveTrip(){
-  const amount = Number(document.getElementById("amount").value || 0);
-  const km = Number(document.getElementById("tripKm").value || 0);
-  const note = document.getElementById("tripNote").value || "";
-  if(!amount) return alert("Entrer un montant");
+async function loadTrips(uid){
+  const q = query(collection(db, "drivers", uid, "trips"), orderBy("date", "desc"));
+  const snap = await getDocs(q);
+  trips = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
 
-  trips.push({
-    amount, km, note, payment,
+async function loadExpenses(uid){
+  const q = query(collection(db, "drivers", uid, "expenses"), orderBy("date", "desc"));
+  const snap = await getDocs(q);
+  expenses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+async function loadAllData(uid){
+  await Promise.all([
+    loadDriverData(uid),
+    loadTrips(uid),
+    loadExpenses(uid)
+  ]);
+  loadSettingsUI();
+  refreshAll();
+}
+
+window.saveTrip = async function(){
+  if(!currentUser) return;
+  const amount = Number($("amount").value || 0);
+  const km = Number($("tripKm").value || 0);
+  const note = $("tripNote").value || "";
+  if(!amount){
+    alert("Entrer un montant");
+    return;
+  }
+
+  await addDoc(collection(db, "drivers", currentUser.uid, "trips"), {
+    amount,
+    km,
+    note,
+    payment,
     date: new Date().toISOString()
   });
-  store.set("trips", trips);
 
-  document.getElementById("amount").value = "";
-  document.getElementById("tripKm").value = "";
-  document.getElementById("tripNote").value = "";
-
+  $("amount").value = "";
+  $("tripKm").value = "";
+  $("tripNote").value = "";
+  await loadTrips(currentUser.uid);
   refreshAll();
   openPage("dashboard");
-}
+};
 
-function openExpenseModal(){
-  document.getElementById("expenseModal").classList.remove("hidden");
-}
-function closeExpenseModal(){
-  document.getElementById("expenseModal").classList.add("hidden");
-}
-function saveExpense(){
-  const amount = Number(document.getElementById("expenseAmount").value || 0);
-  const category = document.getElementById("expenseCategory").value;
-  const note = document.getElementById("expenseNote").value || "";
-  if(!amount) return alert("Entrer un montant");
+window.openExpenseModal = function(){
+  $("expenseModal").classList.remove("hidden");
+};
 
-  expenses.push({
-    amount, category, note,
+window.closeExpenseModal = function(){
+  $("expenseModal").classList.add("hidden");
+};
+
+window.saveExpense = async function(){
+  if(!currentUser) return;
+  const amount = Number($("expenseAmount").value || 0);
+  const category = $("expenseCategory").value;
+  const note = $("expenseNote").value || "";
+  if(!amount){
+    alert("Entrer un montant");
+    return;
+  }
+
+  await addDoc(collection(db, "drivers", currentUser.uid, "expenses"), {
+    amount,
+    category,
+    note,
     date: new Date().toISOString()
   });
-  store.set("expenses", expenses);
 
-  document.getElementById("expenseAmount").value = "";
-  document.getElementById("expenseNote").value = "";
+  $("expenseAmount").value = "";
+  $("expenseNote").value = "";
   closeExpenseModal();
+  await loadExpenses(currentUser.uid);
   refreshAll();
   openPage("expenses");
-}
+};
 
 function renderTrips(){
-  const list = document.getElementById("tripList");
+  const list = $("tripList");
   list.innerHTML = "";
-  trips.slice().reverse().forEach(t=>{
+  trips.forEach(t => {
     const item = document.createElement("div");
     item.className = "list-item";
     item.innerHTML = `
@@ -153,13 +240,15 @@ function renderTrips(){
     `;
     list.appendChild(item);
   });
-  if(!trips.length) list.innerHTML = '<div class="panel">Aucune course pour le moment.</div>';
+  if(!trips.length){
+    list.innerHTML = '<div class="panel">Aucune course pour le moment.</div>';
+  }
 }
 
 function renderExpenses(){
-  const list = document.getElementById("expenseList");
+  const list = $("expenseList");
   list.innerHTML = "";
-  expenses.slice().reverse().forEach(e=>{
+  expenses.forEach(e => {
     const item = document.createElement("div");
     item.className = "list-item";
     item.innerHTML = `
@@ -171,70 +260,74 @@ function renderExpenses(){
     `;
     list.appendChild(item);
   });
-  if(!expenses.length) list.innerHTML = '<div class="panel">Aucune dépense pour le moment.</div>';
+  if(!expenses.length){
+    list.innerHTML = '<div class="panel">Aucune dépense pour le moment.</div>';
+  }
 }
 
-function saveSettings(){
-  settings.driverName = document.getElementById("driverName").value || "";
-  settings.carName = document.getElementById("carName").value || "";
-  settings.costPerKm = Number(document.getElementById("costPerKm").value || 0);
-  settings.enableExpenses = document.getElementById("enableExpenses").checked;
-  store.set("settings", settings);
+window.saveSettings = async function(){
+  if(!currentUser) return;
+  settings.driverName = $("driverName").value || "";
+  settings.carName = $("carName").value || "";
+  settings.costPerKm = Number($("costPerKm").value || 0);
+  settings.enableExpenses = $("enableExpenses").checked;
+
+  await setDoc(doc(db, "drivers", currentUser.uid), settings, { merge: true });
   loadSettingsUI();
   refreshAll();
-}
+};
 
 function loadSettingsUI(){
-  document.getElementById("driverName").value = settings.driverName || "";
-  document.getElementById("carName").value = settings.carName || "";
-  document.getElementById("costPerKm").value = settings.costPerKm ?? 0.25;
-  document.getElementById("enableExpenses").checked = !!settings.enableExpenses;
+  $("driverName").value = settings.driverName || "";
+  $("carName").value = settings.carName || "";
+  $("costPerKm").value = settings.costPerKm ?? 0.25;
+  $("enableExpenses").checked = !!settings.enableExpenses;
 
-  document.getElementById("driverNameDisplay").textContent = settings.driverName || "Chauffeur";
-  document.getElementById("sideDriverName").textContent = settings.driverName || "Chauffeur";
-  document.getElementById("vehicleName").textContent = settings.carName || "Votre véhicule";
-  document.getElementById("nav-expenses").style.display = settings.enableExpenses ? "flex" : "none";
+  $("driverNameDisplay").textContent = settings.driverName || "Chauffeur";
+  $("sideDriverName").textContent = settings.driverName || "Chauffeur";
+  $("vehicleName").textContent = settings.carName || "Votre véhicule";
+  $("nav-expenses").style.display = settings.enableExpenses ? "flex" : "none";
 }
 
 function refreshAll(){
   const today = todayStr();
   const month = monthStr();
 
-  const todayTrips = trips.filter(t=>t.date.slice(0,10)===today);
-  const todayExpenses = expenses.filter(e=>e.date.slice(0,10)===today);
+  const todayTrips = trips.filter(t => String(t.date).slice(0,10) === today);
+  const todayExpenses = expenses.filter(e => String(e.date).slice(0,10) === today);
 
-  const income = todayTrips.reduce((a,b)=>a+Number(b.amount||0),0);
+  const income = todayTrips.reduce((a,b) => a + Number(b.amount || 0), 0);
   const tripCount = todayTrips.length;
-  const km = todayTrips.reduce((a,b)=>a+Number(b.km||0),0);
-  const cash = todayTrips.filter(t=>t.payment==="Cash").reduce((a,b)=>a+Number(b.amount||0),0);
-  const card = todayTrips.filter(t=>t.payment==="Carte").reduce((a,b)=>a+Number(b.amount||0),0);
-  const expense = todayExpenses.reduce((a,b)=>a+Number(b.amount||0),0);
+  const km = todayTrips.reduce((a,b) => a + Number(b.km || 0), 0);
+  const cash = todayTrips.filter(t => t.payment === "Cash").reduce((a,b) => a + Number(b.amount || 0), 0);
+  const card = todayTrips.filter(t => t.payment === "Carte").reduce((a,b) => a + Number(b.amount || 0), 0);
+  const expense = todayExpenses.reduce((a,b) => a + Number(b.amount || 0), 0);
   const profit = income - expense - (km * Number(settings.costPerKm || 0));
 
-  document.getElementById("todayIncome").textContent = formatMoney(income);
-  document.getElementById("todayTrips").textContent = tripCount;
-  document.getElementById("todayKm").textContent = Math.round(km * 10)/10;
-  document.getElementById("cashTotal").textContent = formatMoney(cash);
-  document.getElementById("cardTotal").textContent = formatMoney(card);
-  document.getElementById("expenseTotal").textContent = formatMoney(expense);
-  document.getElementById("profitTotal").textContent = formatMoney(profit);
+  $("todayIncome").textContent = formatMoney(income);
+  $("todayTrips").textContent = tripCount;
+  $("todayKm").textContent = Math.round(km * 10) / 10;
+  $("cashTotal").textContent = formatMoney(cash);
+  $("cardTotal").textContent = formatMoney(card);
+  $("expenseTotal").textContent = formatMoney(expense);
+  $("profitTotal").textContent = formatMoney(profit);
 
   const weekDates = [];
-  for(let i=6;i>=0;i--){
+  for(let i=6; i>=0; i--){
     const d = new Date();
-    d.setDate(d.getDate()-i);
+    d.setDate(d.getDate() - i);
     weekDates.push(d.toISOString().slice(0,10));
   }
-  const weekTotal = trips.filter(t=>weekDates.includes(t.date.slice(0,10))).reduce((a,b)=>a+Number(b.amount||0),0);
-  const monthTrips = trips.filter(t=>t.date.slice(0,7)===month);
-  const monthTotal = monthTrips.reduce((a,b)=>a+Number(b.amount||0),0);
-  const monthKm = monthTrips.reduce((a,b)=>a+Number(b.km||0),0);
+  const weekTotal = trips.filter(t => weekDates.includes(String(t.date).slice(0,10))).reduce((a,b) => a + Number(b.amount || 0), 0);
+  const monthTrips = trips.filter(t => String(t.date).slice(0,7) === month);
+  const monthTotal = monthTrips.reduce((a,b) => a + Number(b.amount || 0), 0);
+  const monthKm = monthTrips.reduce((a,b) => a + Number(b.km || 0), 0);
   const avgTrip = tripCount ? income / tripCount : 0;
 
-  document.getElementById("weekTotal").textContent = formatMoney(weekTotal);
-  document.getElementById("monthTotal").textContent = formatMoney(monthTotal);
-  document.getElementById("avgTrip").textContent = formatMoney(avgTrip);
-  document.getElementById("monthKm").textContent = Math.round(monthKm * 10)/10;
+  $("weekTotal").textContent = formatMoney(weekTotal);
+  $("monthTotal").textContent = formatMoney(monthTotal);
+  $("avgTrip").textContent = formatMoney(avgTrip);
+  $("monthKm").textContent = Math.round(monthKm * 10) / 10;
 
   renderTrips();
   renderExpenses();
@@ -242,7 +335,7 @@ function refreshAll(){
 }
 
 function drawWeeklyChart(){
-  const canvas = document.getElementById("weeklyChart");
+  const canvas = $("weeklyChart");
   if(!canvas) return;
   const ctx = canvas.getContext("2d");
   const cw = canvas.clientWidth;
@@ -259,16 +352,15 @@ function drawWeeklyChart(){
     dates.push(d.toISOString().slice(0,10));
   }
 
-  const values = dates.map(d => trips.filter(t=>t.date.slice(0,10)===d).reduce((a,b)=>a+Number(b.amount||0),0));
+  const values = dates.map(d => trips.filter(t => String(t.date).slice(0,10) === d).reduce((a,b) => a + Number(b.amount || 0), 0));
   const max = Math.max(...values, 1);
   const padding = 16;
-  const barArea = cw - padding*2;
-  const step = barArea / values.length;
+  const step = (cw - padding * 2) / values.length;
   const barW = step * 0.58;
 
-  values.forEach((v,i)=>{
-    const x = padding + i*step + (step-barW)/2;
-    const h = (v/max) * (ch-42);
+  values.forEach((v, i) => {
+    const x = padding + i * step + (step - barW) / 2;
+    const h = (v / max) * (ch - 42);
     const y = ch - 24 - h;
     ctx.fillStyle = "#f7c948";
     roundRect(ctx, x, y, barW, h, 10, true, false);
@@ -277,7 +369,7 @@ function drawWeeklyChart(){
     ctx.textAlign = "center";
     const dd = new Date(dates[i]);
     const label = dd.toLocaleDateString("fr-CA", {weekday:"short"}).slice(0,3);
-    ctx.fillText(label, x + barW/2, ch - 7);
+    ctx.fillText(label, x + barW / 2, ch - 7);
   });
 }
 
@@ -297,7 +389,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   if(stroke) ctx.stroke();
 }
 
-function exportData(){
+window.exportData = function(){
   const data = { settings, trips, expenses };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
   const a = document.createElement("a");
@@ -305,10 +397,25 @@ function exportData(){
   a.download = "taxi-driver-pro-data.json";
   a.click();
   URL.revokeObjectURL(a.href);
-}
+};
 
-window.addEventListener("resize", ()=> {
-  if(document.getElementById("stats").classList.contains("active")) drawWeeklyChart();
+window.addEventListener("resize", () => {
+  if(!$("stats").classList.contains("active")) return;
+  drawWeeklyChart();
 });
+
+switchAuthMode("login");
 setPayment("Cash");
-init();
+
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  if(user){
+    $("loginPage").classList.add("hidden");
+    $("appPage").classList.remove("hidden");
+    await loadAllData(user.uid);
+  } else {
+    $("appPage").classList.add("hidden");
+    $("loginPage").classList.remove("hidden");
+    showAuthMessage("");
+  }
+});

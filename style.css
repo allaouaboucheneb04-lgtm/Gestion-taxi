@@ -163,3 +163,33 @@ canvas{
   .income-big{font-size:40px}
   .mini-box strong,.stats-row strong{font-size:20px}
 }
+
+
+.auth-tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin:16px 0 10px;
+}
+.auth-tab{
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid #2a2a2a;
+  background:#141414;
+  color:#fff;
+}
+.auth-tab.active{
+  background:linear-gradient(180deg,var(--yellow2),var(--yellow));
+  color:#111;
+  border:none;
+}
+.auth-message{
+  min-height:20px;
+  margin-top:12px;
+  font-size:13px;
+  color:#b8b8b8;
+}
+.logout-item{
+  margin-top:8px;
+  border-color:#4a2f2f;
+}
