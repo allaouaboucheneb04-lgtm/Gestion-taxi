@@ -34,7 +34,7 @@
         <label>Mot de passe</label>
         <input id="loginPassword" type="password" placeholder="••••••••" />
 
-        <button id="authButton" class="btn yellow block" onclick="handleAuth()">Créer le compte</button>
+        <button class="btn yellow block" onclick="handleAuth()">Créer le compte</button>
       </div>
 
       <div id="loginFields" class="hidden">
@@ -75,7 +75,7 @@
           <h2>Compagnies</h2>
           <button class="small-btn" onclick="addCompanyRow()">+ Ajouter</button>
         </div>
-        <p class="muted">Suggestions rapides</p>
+        <p class="muted">Chaque compagnie a ses propres frais et son propre début de semaine.</p>
         <div class="chips-wrap" id="companySuggestions"></div>
         <div id="companiesContainer"></div>
       </div>
@@ -167,6 +167,14 @@
           <div class="mini-box"><span>Carte</span><strong id="cardTotal">0 $</strong></div>
           <div class="mini-box"><span>Dépenses</span><strong id="expenseTotal">0 $</strong></div>
           <div class="mini-box"><span>Profit</span><strong id="profitTotal">0 $</strong></div>
+        </div>
+
+        <div class="panel">
+          <div class="row-between">
+            <h2>Semaine compagnie</h2>
+            <div class="small-pill" id="currentWeekRange">-</div>
+          </div>
+          <div id="companyWeekSummary"></div>
         </div>
       </section>
 
