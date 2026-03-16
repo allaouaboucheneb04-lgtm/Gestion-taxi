@@ -1,13 +1,11 @@
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open("taxi-driver-pro-v1").then(cache => cache.addAll([
-      "./","index.html","style.css","app.js","manifest.json","icon-192.png","icon-512.png"
+    caches.open("taxi-driver-pro-v2").then(cache => cache.addAll([
+      "./","index.html","style.css","app.js","firebase.js","manifest.json","icon-192.png","icon-512.png"
     ]))
   );
 });
 self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
-  );
+  event.respondWith(caches.match(event.request).then(response => response || fetch(event.request)));
 });

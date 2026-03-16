@@ -28,22 +28,84 @@
         <label>Nom du chauffeur</label>
         <input id="loginName" type="text" placeholder="Jean Dupuis" />
 
-        <label>Nom du véhicule</label>
-        <input id="loginCar" type="text" placeholder="Toyota Sienna 2025" />
+        <label>Email</label>
+        <input id="loginEmail" type="email" placeholder="chauffeur@email.com" />
+
+        <label>Mot de passe</label>
+        <input id="loginPassword" type="password" placeholder="••••••••" />
+
+        <button id="authButton" class="btn yellow block" onclick="handleAuth()">Créer le compte</button>
       </div>
 
-      <label>Email</label>
-      <input id="loginEmail" type="email" placeholder="chauffeur@email.com" />
+      <div id="loginFields" class="hidden">
+        <label>Email</label>
+        <input id="signinEmail" type="email" placeholder="chauffeur@email.com" />
 
-      <label>Mot de passe</label>
-      <input id="loginPassword" type="password" placeholder="••••••••" />
+        <label>Mot de passe</label>
+        <input id="signinPassword" type="password" placeholder="••••••••" />
 
-      <button id="authButton" class="btn yellow block" onclick="handleAuth()">Connexion</button>
+        <button class="btn yellow block" onclick="handleAuth()">Connexion</button>
+      </div>
+
       <p id="authMessage" class="auth-message"></p>
     </div>
   </section>
 
-  <section id="appPage" class="app-page hidden">
+  <section id="onboardingPage" class="hidden app-page">
+    <header class="topbar">
+      <div class="top-title">Configuration chauffeur</div>
+      <div></div>
+    </header>
+
+    <main class="content">
+      <div class="panel">
+        <h2>Profil chauffeur</h2>
+        <label>Nom du chauffeur</label>
+        <input id="profileDriverName" type="text" placeholder="Jean Dupuis" />
+
+        <label>Objectif par jour ($)</label>
+        <input id="profileDailyGoal" type="number" placeholder="300" />
+
+        <label>Coût estimé par km ($)</label>
+        <input id="profileCostPerKm" type="number" placeholder="0.25" />
+      </div>
+
+      <div class="panel">
+        <div class="row-between">
+          <h2>Compagnies</h2>
+          <button class="small-btn" onclick="addCompanyRow()">+ Ajouter</button>
+        </div>
+        <p class="muted">Suggestions rapides</p>
+        <div class="chips-wrap" id="companySuggestions"></div>
+        <div id="companiesContainer"></div>
+      </div>
+
+      <div class="panel">
+        <div class="row-between">
+          <h2>Méthodes de paiement</h2>
+          <button class="small-btn" onclick="addPaymentMethodRow()">+ Ajouter</button>
+        </div>
+        <div id="paymentMethodsContainer"></div>
+      </div>
+
+      <div class="panel">
+        <div class="row-between">
+          <h2>Véhicules</h2>
+          <button class="small-btn" onclick="addVehicleRow()">+ Ajouter</button>
+        </div>
+        <div id="vehiclesContainer"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Jours de repos</h2>
+        <div id="offDaysContainer" class="days-grid"></div>
+      </div>
+
+      <button class="btn yellow block" onclick="saveOnboarding()">Enregistrer la configuration</button>
+    </main>
+  </section>
+
+  <section id="appPage" class="hidden app-page">
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-head">
         <div class="taxi-badge small">🚕</div>
@@ -75,10 +137,10 @@
       <section id="dashboard" class="page active">
         <div class="vehicle-card">
           <div class="vehicle-info">
-            <div class="muted">Véhicule</div>
+            <div class="muted">Véhicule actuel</div>
             <h2 id="vehicleName">Votre véhicule</h2>
             <div class="chip-row">
-              <span class="chip">En ligne</span>
+              <span class="chip" id="mainCompanyChip">Compagnie</span>
               <span class="chip dark" id="driverNameDisplay">Chauffeur</span>
             </div>
           </div>
@@ -101,22 +163,10 @@
         </div>
 
         <div class="mini-grid">
-          <div class="mini-box">
-            <span>Cash</span>
-            <strong id="cashTotal">0 $</strong>
-          </div>
-          <div class="mini-box">
-            <span>Carte</span>
-            <strong id="cardTotal">0 $</strong>
-          </div>
-          <div class="mini-box">
-            <span>Dépenses</span>
-            <strong id="expenseTotal">0 $</strong>
-          </div>
-          <div class="mini-box">
-            <span>Profit</span>
-            <strong id="profitTotal">0 $</strong>
-          </div>
+          <div class="mini-box"><span>Cash</span><strong id="cashTotal">0 $</strong></div>
+          <div class="mini-box"><span>Carte</span><strong id="cardTotal">0 $</strong></div>
+          <div class="mini-box"><span>Dépenses</span><strong id="expenseTotal">0 $</strong></div>
+          <div class="mini-box"><span>Profit</span><strong id="profitTotal">0 $</strong></div>
         </div>
       </section>
 
@@ -132,9 +182,18 @@
           <input id="amount" type="number" placeholder="0.00" />
 
           <label>Paiement</label>
-          <div class="segmented">
-            <button id="payCash" class="seg active" onclick="setPayment('Cash')">Cash</button>
-            <button id="payCard" class="seg" onclick="setPayment('Carte')">Carte</button>
+          <div id="paymentButtons" class="segmented"></div>
+
+          <label>Compagnie</label>
+          <select id="tripCompany"></select>
+
+          <div id="tripAirportArea" class="hidden">
+            <label>Type de course</label>
+            <div class="segmented">
+              <button id="tripNormalBtn" class="seg active" onclick="setTripType('normal')">Course normale</button>
+              <button id="tripAirportBtn" class="seg" onclick="setTripType('airport')">Course aéroport</button>
+            </div>
+            <p class="muted">Pour Diamand ou Teo avec aéroport, une course aéroport ajoute 5.75$ de frais.</p>
           </div>
 
           <label>Kilomètres</label>
@@ -186,27 +245,20 @@
       <section id="settings" class="page">
         <div class="page-title-row">
           <button class="back-btn" onclick="openPage('dashboard')">←</button>
-          <h2>Réglages</h2>
+          <h2>Paramètres</h2>
           <div></div>
         </div>
+
         <div class="panel">
-          <label>Nom du chauffeur</label>
-          <input id="driverName" type="text" oninput="saveSettings()" />
+          <div class="row-between">
+            <h2>Configuration</h2>
+            <button class="small-btn" onclick="openOnboardingForEdit()">Modifier</button>
+          </div>
+          <p class="muted">Modifie compagnies, méthodes de paiement, véhicules, jours de repos et objectif.</p>
+          <div id="settingsSummary"></div>
+        </div>
 
-          <label>Nom du véhicule</label>
-          <input id="carName" type="text" oninput="saveSettings()" />
-
-          <label>Coût estimé par km ($)</label>
-          <input id="costPerKm" type="number" oninput="saveSettings()" />
-
-          <label class="switch-row">
-            <span>Activer suivi des dépenses</span>
-            <label class="switch">
-              <input id="enableExpenses" type="checkbox" onchange="saveSettings()" />
-              <span class="slider"></span>
-            </label>
-          </label>
-
+        <div class="panel">
           <button class="btn dark block" onclick="exportData()">Exporter les données</button>
           <button class="btn dark block" onclick="logoutUser()">Déconnexion</button>
         </div>
