@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0f18" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Driver Pro" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <title>Driver Pro</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">🚖</div>
+        <div>
+          <div class="brand-title">Driver Pro</div>
+          <div class="brand-subtitle" id="driverGreeting">Bonjour chauffeur</div>
+        </div>
+      </div>
+      <button class="icon-btn" onclick="openPage('settings')" aria-label="Paramètres">⚙️</button>
+    </header>
+
+    <main class="content">
+      <section id="dashboard" class="page active">
+        <div class="hero-card glass">
+          <div class="hero-head">
+            <div>
+              <div class="eyebrow">Aujourd’hui</div>
+              <h1 id="todayIncome">0 $</h1>
+            </div>
+            <div class="status-pill" id="workStatus">Hors ligne</div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-box">
+              <span>Courses</span>
+              <strong id="todayTrips">0</strong>
+            </div>
+            <div class="stat-box">
+              <span>Kilomètres</span>
+              <strong id="todayKm">0</strong>
+            </div>
+            <div class="stat-box">
+              <span>Temps</span>
+              <strong id="todayTime">0h</strong>
+            </div>
+            <div class="stat-box">
+              <span>Profit</span>
+              <strong id="todayProfit">0 $</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="primary green" onclick="openPage('addTrip')">+ Ajouter course</button>
+          <button class="primary blue" id="workBtn" onclick="toggleWork()">▶ Commencer travail</button>
+        </div>
+
+        <div class="cards-grid">
+          <div class="mini-card">
+            <div class="mini-label">Cash</div>
+            <div class="mini-value" id="cashTotal">0 $</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">Carte</div>
+            <div class="mini-value" id="cardTotal">0 $</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">Dépenses</div>
+            <div class="mini-value" id="expenseTotal">0 $</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">Semaine</div>
+            <div class="mini-value" id="weekTotal">0 $</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Revenus des 7 derniers jours</div>
+          <canvas id="weeklyChart" height="160"></canvas>
+        </div>
+      </section>
+
+      <section id="addTrip" class="page">
+        <div class="page-header">
+          <button class="back-btn" onclick="openPage('dashboard')">←</button>
+          <h2>Ajouter une course</h2>
+        </div>
+
+        <div class="panel form-panel">
+          <label>Montant</label>
+          <input type="number" id="amount" placeholder="0.00" />
+
+          <label>Paiement</label>
+          <div class="segmented">
+            <button id="payCash" class="seg active" onclick="setPayment('Cash')">Cash</button>
+            <button id="payCard" class="seg" onclick="setPayment('Carte')">Carte</button>
+          </div>
+
+          <label>Kilomètres</label>
+          <input type="number" id="tripKm" placeholder="0" />
+
+          <label>Note (optionnel)</label>
+          <textarea id="note" placeholder="Ajouter une note..."></textarea>
+
+          <button class="primary blue block" onclick="saveTrip()">Enregistrer</button>
+        </div>
+      </section>
+
+      <section id="history" class="page">
+        <div class="page-header">
+          <div></div>
+          <h2>Historique</h2>
+          <div></div>
+        </div>
+        <div id="tripList" class="list"></div>
+      </section>
+
+      <section id="expenses" class="page">
+        <div class="page-header">
+          <button class="back-btn" onclick="openPage('dashboard')">←</button>
+          <h2>Dépenses</h2>
+          <button class="small-btn" onclick="openExpenseModal()">+ Ajouter</button>
+        </div>
+        <div id="expenseList" class="list"></div>
+      </section>
+
+      <section id="stats" class="page">
+        <div class="page-header">
+          <div></div>
+          <h2>Statistiques</h2>
+          <div></div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="mini-card"><div class="mini-label">Mois</div><div class="mini-value" id="monthTotal">0 $</div></div>
+          <div class="mini-card"><div class="mini-label">Moy./course</div><div class="mini-value" id="avgTrip">0 $</div></div>
+          <div class="mini-card"><div class="mini-label">Revenu/h</div><div class="mini-value" id="hourlyRate">0 $</div></div>
+          <div class="mini-card"><div class="mini-label">Km total</div><div class="mini-value" id="monthKm">0</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Répartition des paiements</div>
+          <canvas id="paymentChart" height="180"></canvas>
+        </div>
+      </section>
+
+      <section id="settings" class="page">
+        <div class="page-header">
+          <button class="back-btn" onclick="openPage('dashboard')">←</button>
+          <h2>Paramètres</h2>
+          <div></div>
+        </div>
+
+        <div class="panel form-panel">
+          <label>Nom du chauffeur</label>
+          <input type="text" id="driverName" placeholder="Jean Dupuis" oninput="saveSettings()" />
+
+          <label class="switch-row">
+            <span>Activer suivi des dépenses</span>
+            <label class="switch">
+              <input type="checkbox" id="enableExpenses" onchange="saveSettings(); updateNavVisibility();" />
+              <span class="slider"></span>
+            </label>
+          </label>
+
+          <label>Coût estimé par km ($)</label>
+          <input type="number" id="costPerKm" placeholder="0.25" oninput="saveSettings()" />
+
+          <label>Objectif du jour ($)</label>
+          <input type="number" id="dailyGoal" placeholder="300" oninput="saveSettings()" />
+
+          <button class="secondary" onclick="exportData()">Exporter les données (.json)</button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button onclick="openPage('dashboard')" id="nav-dashboard" class="nav-item active">🏠<span>Accueil</span></button>
+      <button onclick="openPage('history')" id="nav-history" class="nav-item">🕘<span>Historique</span></button>
+      <button onclick="openPage('stats')" id="nav-stats" class="nav-item">📈<span>Stats</span></button>
+      <button onclick="openPage('expenses')" id="nav-expenses" class="nav-item">⛽<span>Dépenses</span></button>
+      <button onclick="openPage('settings')" id="nav-settings" class="nav-item">⚙️<span>Réglages</span></button>
+    </nav>
+  </div>
+
+  <div class="modal hidden" id="expenseModal">
+    <div class="modal-card">
+      <div class="page-header">
+        <button class="back-btn" onclick="closeExpenseModal()">×</button>
+        <h3>Ajouter dépense</h3>
+        <div></div>
+      </div>
+      <label>Montant</label>
+      <input type="number" id="expenseAmount" placeholder="0.00" />
+      <label>Catégorie</label>
+      <select id="expenseCategory">
+        <option>Essence</option>
+        <option>Lavage</option>
+        <option>Réparation</option>
+        <option>Parking</option>
+        <option>Autre</option>
+      </select>
+      <label>Note</label>
+      <textarea id="expenseNote" placeholder="Note..."></textarea>
+      <button class="primary blue block" onclick="saveExpense()">Enregistrer</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
