@@ -3,98 +3,115 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0f18" />
+  <meta name="theme-color" content="#0b0b0b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Driver Pro" />
+  <meta name="apple-mobile-web-app-title" content="Taxi Driver Pro" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
-  <title>Driver Pro</title>
+  <title>Taxi Driver Pro</title>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-icon">🚖</div>
+  <section id="loginPage" class="login-page">
+    <div class="login-card">
+      <div class="taxi-badge">🚕</div>
+      <h1>Taxi Driver Pro</h1>
+      <p>Application chauffeur simple et premium</p>
+      <label>Nom du chauffeur</label>
+      <input id="loginName" type="text" placeholder="Jean Dupuis" />
+      <label>Nom du véhicule</label>
+      <input id="loginCar" type="text" placeholder="Toyota Sienna 2025" />
+      <button class="btn yellow" onclick="login()">Entrer dans l'application</button>
+    </div>
+  </section>
+
+  <section id="appPage" class="app-page hidden">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-head">
+        <div class="taxi-badge small">🚕</div>
         <div>
-          <div class="brand-title">Driver Pro</div>
-          <div class="brand-subtitle" id="driverGreeting">Bonjour chauffeur</div>
+          <strong id="sideDriverName">Chauffeur</strong>
+          <div class="muted">Mode chauffeur</div>
         </div>
+        <button class="close-btn" onclick="toggleSidebar()">×</button>
       </div>
-      <button class="icon-btn" onclick="openPage('settings')" aria-label="Paramètres">⚙️</button>
+
+      <button class="menu-item" onclick="openPage('dashboard'); toggleSidebar();">🏠 Accueil</button>
+      <button class="menu-item" onclick="openPage('addTrip'); toggleSidebar();">➕ Ajouter course</button>
+      <button class="menu-item" onclick="openPage('history'); toggleSidebar();">🕘 Historique</button>
+      <button class="menu-item" onclick="openPage('expenses'); toggleSidebar();">⛽ Dépenses</button>
+      <button class="menu-item" onclick="openPage('stats'); toggleSidebar();">📈 Statistiques</button>
+      <button class="menu-item" onclick="openPage('settings'); toggleSidebar();">⚙️ Réglages</button>
+    </aside>
+
+    <div id="overlay" class="overlay hidden" onclick="toggleSidebar()"></div>
+
+    <header class="topbar">
+      <button class="icon-btn" onclick="toggleSidebar()">☰</button>
+      <div class="top-title">Taxi Driver Pro</div>
+      <button class="icon-btn" onclick="openPage('settings')">⚙️</button>
     </header>
 
     <main class="content">
       <section id="dashboard" class="page active">
-        <div class="hero-card glass">
-          <div class="hero-head">
-            <div>
-              <div class="eyebrow">Aujourd’hui</div>
-              <h1 id="todayIncome">0 $</h1>
+        <div class="vehicle-card">
+          <div class="vehicle-info">
+            <div class="muted">Véhicule</div>
+            <h2 id="vehicleName">Toyota Sienna 2025</h2>
+            <div class="chip-row">
+              <span class="chip">En ligne</span>
+              <span class="chip dark" id="driverNameDisplay">Jean Dupuis</span>
             </div>
-            <div class="status-pill" id="workStatus">Hors ligne</div>
           </div>
+          <div class="car-emoji">🚕</div>
+        </div>
 
-          <div class="stats-grid">
-            <div class="stat-box">
-              <span>Courses</span>
-              <strong id="todayTrips">0</strong>
-            </div>
-            <div class="stat-box">
-              <span>Kilomètres</span>
-              <strong id="todayKm">0</strong>
-            </div>
-            <div class="stat-box">
-              <span>Temps</span>
-              <strong id="todayTime">0h</strong>
-            </div>
-            <div class="stat-box">
-              <span>Profit</span>
-              <strong id="todayProfit">0 $</strong>
-            </div>
+        <div class="income-card">
+          <div class="muted">Aujourd'hui</div>
+          <div class="income-big" id="todayIncome">0 $</div>
+          <div class="stats-row">
+            <div><span>Courses</span><strong id="todayTrips">0</strong></div>
+            <div><span>Km</span><strong id="todayKm">0</strong></div>
+            <div><span>Temps</span><strong id="todayTime">0h</strong></div>
           </div>
         </div>
 
-        <div class="action-row">
-          <button class="primary green" onclick="openPage('addTrip')">+ Ajouter course</button>
-          <button class="primary blue" id="workBtn" onclick="toggleWork()">▶ Commencer travail</button>
+        <div class="dashboard-actions">
+          <button class="btn yellow" onclick="openPage('addTrip')">+ Ajouter course</button>
+          <button class="btn dark" id="workBtn" onclick="toggleWork()">▶ Commencer travail</button>
         </div>
 
-        <div class="cards-grid">
-          <div class="mini-card">
-            <div class="mini-label">Cash</div>
-            <div class="mini-value" id="cashTotal">0 $</div>
+        <div class="mini-grid">
+          <div class="mini-box">
+            <span>Cash</span>
+            <strong id="cashTotal">0 $</strong>
           </div>
-          <div class="mini-card">
-            <div class="mini-label">Carte</div>
-            <div class="mini-value" id="cardTotal">0 $</div>
+          <div class="mini-box">
+            <span>Carte</span>
+            <strong id="cardTotal">0 $</strong>
           </div>
-          <div class="mini-card">
-            <div class="mini-label">Dépenses</div>
-            <div class="mini-value" id="expenseTotal">0 $</div>
+          <div class="mini-box">
+            <span>Dépenses</span>
+            <strong id="expenseTotal">0 $</strong>
           </div>
-          <div class="mini-card">
-            <div class="mini-label">Semaine</div>
-            <div class="mini-value" id="weekTotal">0 $</div>
+          <div class="mini-box">
+            <span>Profit</span>
+            <strong id="profitTotal">0 $</strong>
           </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-title">Revenus des 7 derniers jours</div>
-          <canvas id="weeklyChart" height="160"></canvas>
         </div>
       </section>
 
       <section id="addTrip" class="page">
-        <div class="page-header">
+        <div class="page-title-row">
           <button class="back-btn" onclick="openPage('dashboard')">←</button>
           <h2>Ajouter une course</h2>
+          <div></div>
         </div>
 
-        <div class="panel form-panel">
+        <div class="panel">
           <label>Montant</label>
-          <input type="number" id="amount" placeholder="0.00" />
+          <input id="amount" type="number" placeholder="0.00" />
 
           <label>Paiement</label>
           <div class="segmented">
@@ -103,17 +120,17 @@
           </div>
 
           <label>Kilomètres</label>
-          <input type="number" id="tripKm" placeholder="0" />
+          <input id="tripKm" type="number" placeholder="0" />
 
           <label>Note (optionnel)</label>
-          <textarea id="note" placeholder="Ajouter une note..."></textarea>
+          <textarea id="tripNote" placeholder="Ajouter une note..."></textarea>
 
-          <button class="primary blue block" onclick="saveTrip()">Enregistrer</button>
+          <button class="btn yellow block" onclick="saveTrip()">Enregistrer</button>
         </div>
       </section>
 
       <section id="history" class="page">
-        <div class="page-header">
+        <div class="page-title-row">
           <div></div>
           <h2>Historique</h2>
           <div></div>
@@ -122,7 +139,7 @@
       </section>
 
       <section id="expenses" class="page">
-        <div class="page-header">
+        <div class="page-title-row">
           <button class="back-btn" onclick="openPage('dashboard')">←</button>
           <h2>Dépenses</h2>
           <button class="small-btn" onclick="openExpenseModal()">+ Ajouter</button>
@@ -131,73 +148,70 @@
       </section>
 
       <section id="stats" class="page">
-        <div class="page-header">
+        <div class="page-title-row">
           <div></div>
           <h2>Statistiques</h2>
           <div></div>
         </div>
-
-        <div class="cards-grid">
-          <div class="mini-card"><div class="mini-label">Mois</div><div class="mini-value" id="monthTotal">0 $</div></div>
-          <div class="mini-card"><div class="mini-label">Moy./course</div><div class="mini-value" id="avgTrip">0 $</div></div>
-          <div class="mini-card"><div class="mini-label">Revenu/h</div><div class="mini-value" id="hourlyRate">0 $</div></div>
-          <div class="mini-card"><div class="mini-label">Km total</div><div class="mini-value" id="monthKm">0</div></div>
+        <div class="mini-grid">
+          <div class="mini-box"><span>Semaine</span><strong id="weekTotal">0 $</strong></div>
+          <div class="mini-box"><span>Mois</span><strong id="monthTotal">0 $</strong></div>
+          <div class="mini-box"><span>Moyenne</span><strong id="avgTrip">0 $</strong></div>
+          <div class="mini-box"><span>Km mois</span><strong id="monthKm">0</strong></div>
         </div>
-
         <div class="panel">
-          <div class="panel-title">Répartition des paiements</div>
-          <canvas id="paymentChart" height="180"></canvas>
+          <div class="chart-title">Revenus des 7 derniers jours</div>
+          <canvas id="weeklyChart" height="170"></canvas>
         </div>
       </section>
 
       <section id="settings" class="page">
-        <div class="page-header">
+        <div class="page-title-row">
           <button class="back-btn" onclick="openPage('dashboard')">←</button>
-          <h2>Paramètres</h2>
+          <h2>Réglages</h2>
           <div></div>
         </div>
-
-        <div class="panel form-panel">
+        <div class="panel">
           <label>Nom du chauffeur</label>
-          <input type="text" id="driverName" placeholder="Jean Dupuis" oninput="saveSettings()" />
+          <input id="driverName" type="text" oninput="saveSettings()" />
+
+          <label>Nom du véhicule</label>
+          <input id="carName" type="text" oninput="saveSettings()" />
+
+          <label>Coût estimé par km ($)</label>
+          <input id="costPerKm" type="number" oninput="saveSettings()" />
 
           <label class="switch-row">
             <span>Activer suivi des dépenses</span>
             <label class="switch">
-              <input type="checkbox" id="enableExpenses" onchange="saveSettings(); updateNavVisibility();" />
+              <input id="enableExpenses" type="checkbox" onchange="saveSettings()" />
               <span class="slider"></span>
             </label>
           </label>
 
-          <label>Coût estimé par km ($)</label>
-          <input type="number" id="costPerKm" placeholder="0.25" oninput="saveSettings()" />
-
-          <label>Objectif du jour ($)</label>
-          <input type="number" id="dailyGoal" placeholder="300" oninput="saveSettings()" />
-
-          <button class="secondary" onclick="exportData()">Exporter les données (.json)</button>
+          <button class="btn dark block" onclick="exportData()">Exporter les données</button>
         </div>
       </section>
     </main>
 
     <nav class="bottom-nav">
-      <button onclick="openPage('dashboard')" id="nav-dashboard" class="nav-item active">🏠<span>Accueil</span></button>
-      <button onclick="openPage('history')" id="nav-history" class="nav-item">🕘<span>Historique</span></button>
-      <button onclick="openPage('stats')" id="nav-stats" class="nav-item">📈<span>Stats</span></button>
-      <button onclick="openPage('expenses')" id="nav-expenses" class="nav-item">⛽<span>Dépenses</span></button>
-      <button onclick="openPage('settings')" id="nav-settings" class="nav-item">⚙️<span>Réglages</span></button>
+      <button onclick="openPage('dashboard')" class="nav-item active" id="nav-dashboard">🏠<span>Accueil</span></button>
+      <button onclick="openPage('history')" class="nav-item" id="nav-history">🕘<span>Historique</span></button>
+      <button onclick="openPage('stats')" class="nav-item" id="nav-stats">📈<span>Stats</span></button>
+      <button onclick="openPage('expenses')" class="nav-item" id="nav-expenses">⛽<span>Dépenses</span></button>
+      <button onclick="openPage('settings')" class="nav-item" id="nav-settings">⚙️<span>Réglages</span></button>
     </nav>
-  </div>
+  </section>
 
-  <div class="modal hidden" id="expenseModal">
+  <div id="expenseModal" class="modal hidden">
     <div class="modal-card">
-      <div class="page-header">
+      <div class="page-title-row">
         <button class="back-btn" onclick="closeExpenseModal()">×</button>
         <h3>Ajouter dépense</h3>
         <div></div>
       </div>
       <label>Montant</label>
-      <input type="number" id="expenseAmount" placeholder="0.00" />
+      <input id="expenseAmount" type="number" placeholder="0.00" />
       <label>Catégorie</label>
       <select id="expenseCategory">
         <option>Essence</option>
@@ -208,7 +222,7 @@
       </select>
       <label>Note</label>
       <textarea id="expenseNote" placeholder="Note..."></textarea>
-      <button class="primary blue block" onclick="saveExpense()">Enregistrer</button>
+      <button class="btn yellow block" onclick="saveExpense()">Enregistrer</button>
     </div>
   </div>
 

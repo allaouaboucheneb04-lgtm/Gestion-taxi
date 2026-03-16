@@ -1,10 +1,10 @@
 {
-  "name": "Driver Pro",
-  "short_name": "DriverPro",
+  "name": "Taxi Driver Pro",
+  "short_name": "TaxiPro",
   "display": "standalone",
   "start_url": "./",
-  "background_color": "#0a0f18",
-  "theme_color": "#0a0f18",
+  "background_color": "#0b0b0b",
+  "theme_color": "#0b0b0b",
   "icons": [
     {
       "src": "icon-192.png",

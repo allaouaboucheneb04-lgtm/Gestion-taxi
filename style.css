@@ -1,113 +1,165 @@
 
 :root{
-  --bg:#0a0f18;
-  --panel:#121a27;
-  --panel2:#182233;
-  --muted:#8da0bb;
-  --text:#f4f7fb;
-  --line:#243144;
-  --blue:#2f6bff;
-  --green:#23b26d;
-  --orange:#ffb54a;
-  --danger:#ff5f6d;
+  --bg:#0b0b0b;
+  --panel:#151515;
+  --panel2:#1d1d1d;
+  --line:#2b2b2b;
+  --text:#ffffff;
+  --muted:#b8b8b8;
+  --yellow:#f7c948;
+  --yellow2:#ffde73;
 }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:radial-gradient(circle at top,#121b2c 0%, #0a0f18 45%, #070b12 100%);color:var(--text);font-family:Arial,Helvetica,sans-serif}
-body{min-height:100vh}
+html,body{margin:0;padding:0;background:linear-gradient(180deg,#0a0a0a,#111);color:var(--text);font-family:Arial,Helvetica,sans-serif}
 button,input,textarea,select{font:inherit}
-.app-shell{max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:92px}
+.hidden{display:none !important}
+
+.login-page,.app-page{min-height:100vh}
+.login-page{
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  background:
+  radial-gradient(circle at top,#302200 0%, transparent 45%),
+  linear-gradient(180deg,#090909,#151515)
+}
+.login-card,.panel,.income-card,.vehicle-card,.mini-box,.list-item,.modal-card{
+  background:linear-gradient(180deg,#171717,#101010);
+  border:1px solid #272727;
+  box-shadow:0 18px 35px rgba(0,0,0,.35);
+}
+.login-card{
+  width:100%;max-width:420px;border-radius:28px;padding:26px
+}
+.login-card h1{margin:14px 0 8px;font-size:32px}
+.login-card p{color:var(--muted);margin:0 0 18px}
+label{display:block;margin:12px 0 8px;color:#f3f3f3}
+input,textarea,select{
+  width:100%;padding:14px 16px;border-radius:16px;border:1px solid var(--line);
+  background:#0e0e0e;color:#fff;outline:none
+}
+textarea{min-height:100px;resize:none}
+.taxi-badge{
+  width:70px;height:70px;border-radius:22px;background:linear-gradient(180deg,var(--yellow2),var(--yellow));
+  display:flex;align-items:center;justify-content:center;font-size:34px;color:#111
+}
+.taxi-badge.small{width:52px;height:52px;font-size:24px;border-radius:16px}
+.btn{
+  border:none;border-radius:18px;padding:15px 16px;font-weight:700
+}
+.btn.yellow{background:linear-gradient(180deg,var(--yellow2),var(--yellow));color:#111}
+.btn.dark{background:#242424;color:#fff;border:1px solid #343434}
+.block{width:100%}
+
 .topbar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:18px 16px 10px 16px;position:sticky;top:0;
-  background:linear-gradient(180deg, rgba(10,15,24,.96), rgba(10,15,24,.76), rgba(10,15,24,0));
-  backdrop-filter: blur(10px);z-index:4
+  position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;background:rgba(10,10,10,.94);backdrop-filter:blur(10px);border-bottom:1px solid #1e1e1e
 }
-.brand{display:flex;align-items:center;gap:12px}
-.brand-icon{width:44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#1d2840,#101827);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 8px 20px rgba(0,0,0,.28)}
-.brand-title{font-size:20px;font-weight:700}
-.brand-subtitle{font-size:12px;color:var(--muted);margin-top:2px}
-.icon-btn{
-  width:42px;height:42px;border-radius:12px;border:1px solid var(--line);
-  background:rgba(255,255,255,.03);color:#fff
+.top-title{font-size:18px;font-weight:700}
+.icon-btn,.back-btn,.small-btn,.close-btn{
+  border:none;border-radius:14px;background:#1d1d1d;color:#fff
 }
-.content{padding:10px 16px 24px}
+.icon-btn,.back-btn,.close-btn{width:42px;height:42px;font-size:20px}
+.small-btn{padding:10px 12px;border:1px solid #343434}
+.content{padding:16px 16px 100px;max-width:520px;margin:0 auto}
 .page{display:none}
 .page.active{display:block}
-.hero-card,.panel,.mini-card,.list-item,.modal-card{
-  border:1px solid rgba(255,255,255,.05);
-  background:linear-gradient(145deg, rgba(24,34,51,.92), rgba(15,22,34,.94));
-  box-shadow:0 16px 30px rgba(0,0,0,.28);
+
+.vehicle-card{
+  border-radius:26px;padding:18px;background:
+  radial-gradient(circle at right top, rgba(247,201,72,.28), transparent 38%),
+  linear-gradient(180deg,#1d1d1d,#101010);
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:14px
 }
-.glass{backdrop-filter: blur(12px)}
-.hero-card{padding:18px;border-radius:24px}
-.eyebrow{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-h1{margin:8px 0 10px;font-size:46px}
-.hero-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
-.status-pill{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.06);font-size:12px;color:#c9d5e6;border:1px solid var(--line)}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-.stat-box{padding:14px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05)}
-.stat-box span{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}
-.stat-box strong{font-size:22px}
-.action-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
-.primary,.secondary,.small-btn,.back-btn{
-  border:none;border-radius:18px;padding:15px 14px;color:#fff
+.vehicle-card h2{margin:6px 0 12px;font-size:28px}
+.car-emoji{font-size:60px}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{
+  display:inline-block;padding:8px 12px;border-radius:999px;background:rgba(247,201,72,.18);
+  border:1px solid rgba(247,201,72,.35);color:#ffe08c;font-size:12px
 }
-.primary{font-weight:700;box-shadow:0 12px 22px rgba(0,0,0,.25)}
-.primary.green{background:linear-gradient(145deg,#26c273,#17975a)}
-.primary.blue{background:linear-gradient(145deg,#3f7cff,#1f56d7)}
-.block{width:100%}
-.secondary{width:100%;background:#223149;border:1px solid var(--line);margin-top:10px}
-.small-btn{padding:10px 12px;border-radius:14px;background:#223149;border:1px solid var(--line);font-size:13px}
-.cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.mini-card{padding:14px;border-radius:20px}
-.mini-label{font-size:12px;color:var(--muted);margin-bottom:6px}
-.mini-value{font-size:24px;font-weight:700}
-.panel{padding:16px;border-radius:24px;margin-bottom:16px}
-.panel-title{font-size:14px;font-weight:700;margin-bottom:12px}
-.page-header{display:grid;grid-template-columns:44px 1fr 70px;gap:8px;align-items:center;margin-bottom:14px}
-.page-header h2,.page-header h3{margin:0;text-align:center}
-.back-btn{
-  width:40px;height:40px;padding:0;background:#182233;border:1px solid var(--line);font-size:20px
+.chip.dark{background:#1c1c1c;border-color:#333;color:#ddd}
+.muted{color:var(--muted)}
+
+.income-card{
+  border-radius:26px;padding:18px;margin-bottom:14px
 }
-.form-panel label{display:block;color:#cfd8e5;font-size:14px;margin:12px 0 8px}
-input,textarea,select{
-  width:100%;background:#0f1724;border:1px solid var(--line);color:#fff;
-  border-radius:16px;padding:14px 16px;outline:none
+.income-big{font-size:48px;font-weight:800;margin:8px 0 12px}
+.stats-row{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px
 }
-textarea{min-height:110px;resize:none}
-.segmented{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stats-row div{
+  background:#131313;border:1px solid #262626;border-radius:18px;padding:12px;text-align:center
+}
+.stats-row span{display:block;font-size:12px;color:#bbb;margin-bottom:6px}
+.stats-row strong{font-size:22px}
+.dashboard-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mini-box{
+  border-radius:22px;padding:15px
+}
+.mini-box span{display:block;color:#bfbfbf;font-size:12px;margin-bottom:8px}
+.mini-box strong{font-size:24px}
+
+.page-title-row{
+  display:grid;grid-template-columns:44px 1fr 90px;align-items:center;gap:8px;margin-bottom:14px
+}
+.page-title-row h2,.page-title-row h3{margin:0;text-align:center}
+.panel{border-radius:24px;padding:16px}
+.segmented{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .seg{
-  border:1px solid var(--line);background:#111a28;color:#fff;border-radius:16px;padding:14px 10px
+  border:1px solid #343434;background:#151515;color:#fff;border-radius:16px;padding:14px 10px
 }
-.seg.active{background:linear-gradient(145deg,#2f6bff,#224fc5);border-color:transparent}
+.seg.active{background:linear-gradient(180deg,var(--yellow2),var(--yellow));color:#111;border:none}
 .list{display:flex;flex-direction:column;gap:12px}
-.list-item{padding:15px;border-radius:18px;display:flex;justify-content:space-between;align-items:center}
-.list-item .left strong{display:block;font-size:22px}
-.list-item .left span,.list-item .right{color:var(--muted);font-size:13px}
-.bottom-nav{
-  position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;
-  padding:10px 10px calc(10px + env(safe-area-inset-bottom, 0px));background:rgba(8,11,18,.94);backdrop-filter: blur(16px);
-  border-top:1px solid rgba(255,255,255,.05);z-index:5
+.list-item{
+  border-radius:20px;padding:15px;display:flex;justify-content:space-between;gap:12px;align-items:center
 }
-.bottom-nav .nav-item{
-  width:20%;max-width:104px;background:none;border:none;color:#b9c7da;
+.list-item .left strong{display:block;font-size:22px}
+.list-item .left span,.list-item .right{font-size:13px;color:#bdbdbd}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:12px}
+canvas{
+  width:100%;background:#121212;border:1px solid #2a2a2a;border-radius:18px;padding:10px
+}
+
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:5;background:rgba(10,10,10,.96);backdrop-filter:blur(10px);
+  border-top:1px solid #202020;display:flex;justify-content:center;padding:10px 8px calc(10px + env(safe-area-inset-bottom,0px))
+}
+.nav-item{
+  width:20%;max-width:104px;background:none;border:none;color:#c0c0c0;
   display:flex;flex-direction:column;align-items:center;gap:4px;font-size:20px
 }
-.bottom-nav .nav-item span{font-size:11px}
-.bottom-nav .nav-item.active{color:#fff}
+.nav-item span{font-size:11px}
+.nav-item.active{color:#ffdd7a}
+
+.sidebar{
+  position:fixed;top:0;bottom:0;left:0;width:290px;background:#111;z-index:12;
+  transform:translateX(-100%);transition:.2s ease;border-right:1px solid #222;padding:18px
+}
+.sidebar.open{transform:translateX(0)}
+.sidebar-head{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.menu-item{
+  width:100%;text-align:left;padding:14px 14px;border-radius:16px;border:1px solid #272727;
+  background:#181818;color:#fff;margin-bottom:10px
+}
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:11
+}
+.modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;padding:16px;z-index:13
+}
+.modal-card{
+  width:100%;max-width:520px;border-radius:28px;padding:16px
+}
 .switch-row{display:flex;justify-content:space-between;align-items:center}
-.switch{position:relative;display:inline-block;width:52px;height:30px}
+.switch{position:relative;display:inline-block;width:54px;height:30px}
 .switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;background:#253247;border-radius:999px;border:1px solid var(--line)}
-.slider:before{content:"";position:absolute;width:22px;height:22px;left:4px;top:3px;background:#fff;border-radius:50%;transition:.2s}
-.switch input:checked + .slider{background:#1b9d61}
-.switch input:checked + .slider:before{transform:translateX(22px)}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;padding:16px;z-index:9}
-.modal.hidden{display:none}
-.modal-card{width:100%;max-width:520px;border-radius:24px;padding:16px}
-canvas{width:100%;background:#0f1724;border:1px solid var(--line);border-radius:18px;padding:10px}
+.slider{position:absolute;inset:0;background:#343434;border-radius:999px}
+.slider:before{content:"";position:absolute;width:22px;height:22px;left:4px;top:4px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked + .slider{background:#f7c948}
+.switch input:checked + .slider:before{transform:translateX(24px)}
 @media (max-width:420px){
-  h1{font-size:40px}
-  .stat-box strong{font-size:20px}
-  .mini-value{font-size:22px}
+  .vehicle-card h2{font-size:24px}
+  .income-big{font-size:40px}
+  .mini-box strong,.stats-row strong{font-size:20px}
 }
